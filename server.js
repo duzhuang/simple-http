@@ -9,13 +9,13 @@ const server = net.createServer((socket) => {
 
     // 尝试解析 HTTP 请求
     socket.on('data', (chunk) => {
-        console.log("收到的TCP数据流:", chunk);
+        //console.log("收到的TCP数据流:", chunk);
         // 将当前数据块转换为字符串并追加到缓冲区
         buffer += chunk.toString();
-        console.log("当前缓冲区原始数据:", JSON.stringify(buffer));
+        //console.log("当前缓冲区原始数据:", JSON.stringify(buffer));
         // 尝试解析完整的 HTTP 请求
         const request = parseHttpRequest(buffer);
-        console.log("解析后的HTTP请求:", request);
+        //console.log("解析后的HTTP请求:", request);
         // 如果解析成功，处理请求
         if (request) {
             const response = handleRequest(request);

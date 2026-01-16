@@ -23,9 +23,17 @@ function parseHttpRequest(buffer) {
 
     // 提取请求体
     let body = "";
-    if (headers['content-length']) {
-        const length = parseInt(headers['content-length'], 10);
-        body = buffer.slice(headerEnd + 4, headerEnd + 4 + length);
+    const bodyRaw = buffer.slice(headerEnd + 4);
+    
+    // 请求的类别
+    if (headers["content-length"]) {
+        const length = parseInt(headers["content-length"], 10);
+        body = bodyRaw.slice(0, length);
+    } else if (headers["transfer-encoding"] === "chunked") {
+        // 解析 chunked 编码的请求体
+        body = parseChunkedBody(bodyRaw);
+    } else {
+        body = bodyRaw;
     }
 
     return {
@@ -35,6 +43,34 @@ function parseHttpRequest(buffer) {
         headers,
         body
     };
+}
+
+function parseChunkedBody(data) {
+    let pos = 0;
+    let body = '';
+
+    while (true) {
+        // 找到 chunk 长度行
+        const lineEnd = data.indexOf('\r\n', pos);
+        if (lineEnd === -1) {
+            break;
+        }
+
+        const sizeHex = data.slice(pos, lineEnd);
+        const size = parseInt(sizeHex, 16);
+
+        pos = lineEnd + 2; // 跳过 '\r\n'
+
+        if (size === 0) {
+            break; // 结束
+        }
+
+        // 读取 chunk 数据
+        body += data.slice(pos, pos + size);
+        pos += size + 2; // 跳过数据和结尾的 '\r\n'
+    }
+
+    return body;
 }
 
 module.exports = {
