@@ -1,8 +1,37 @@
 // 启动 TCP 服务器
 const net = require('net');
 const Parser = require("./parser")
-const { handleRequest } = require('./handlers');
 const HTTPConnectionState = require('./stateMachine');
+const Router = require('./Router');
+
+const router = new Router();
+
+router.use("/index.html",(req)=>{
+    return router.buildResponse(200, 'OK', '<h1>Hello World</h1>', req.headers['connection'] === 'keep-alive');
+})
+
+router.use("/test",(req)=>{
+    return router.buildResponse(200, 'OK', '<h1>Test</h1>', req.headers['connection'] === 'keep-alive');
+})
+
+router.use("/stream", (req) => {
+    // 返回 chundked 响应
+    let response = 'HTTP/1.1 200 OK\r\n' +
+        'Content-Type: text/plain\r\n' +
+        'Transfer-Encoding: chunked\r\n' +
+        `Connection: ${req.headers['connection'] === 'keep-alive' ? 'keep-alive' : 'close'}\r\n` +
+        '\r\n';
+
+    const chunks = ['Hello', 'World', 'From', 'Chunked'];
+    chunks.forEach((chunk) => {
+        response += chunk.length.toString(16) + '\r\n';
+        response += chunk + '\r\n';
+    });
+    response += '0\r\n\r\n';
+    return response;
+})
+
+
 
 const server = net.createServer((socket) => {
 
@@ -16,10 +45,9 @@ const server = net.createServer((socket) => {
         const request = stateMachine.onData(chunk);
 
         if (request) {
-            const response = handleRequest(request);            
+            const response = router.dispatch(request);            
 
             socket.write(response);
-
             //判断链接是否关闭
             if (request.headers['connection'] === 'close') {
                 socket.end();
