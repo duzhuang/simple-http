@@ -7,6 +7,12 @@ class HTTPConnectionState {
         this.headers = null;
         this.parser = parser;
         this.socket = socket;
+
+        //保存请求头信息
+        this.method = null;
+        this.path = null;
+        this.version = null;
+        this.headers = null;
     }
 
     onData(chunk) {
@@ -18,10 +24,10 @@ class HTTPConnectionState {
             if (this.state === 'READING_HEADERS') {
                 const headerEnd = this.buffer.indexOf('\r\n\r\n');
                 if (headerEnd === -1) break;
+
                 const headerPart = this.buffer.slice(0, headerEnd);
                 const parsedHeader = this.parser.parseHeaders(headerPart);  
-                
-                // 保存完整的请求头信息
+                            
                 this.method = parsedHeader.method;
                 this.path = parsedHeader.path;
                 this.version = parsedHeader.version;
@@ -51,6 +57,7 @@ class HTTPConnectionState {
                 if (this.headers["content-length"]) {
                     const length = parseInt(this.headers["content-length"], 10);
                     const parsed = this.parser.parseContentLengthBody(this.buffer, length);
+                    if(!parsed.complete) break;
                     body = parsed.body;
                     this.buffer = parsed.remaining;
                 } else if (this.headers['transfer-encoding'] === 'chunked') {
