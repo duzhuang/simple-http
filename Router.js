@@ -35,11 +35,11 @@ class Router {
     runMiddleware(req, resBuilder, done) {
         let index = 0;
         // 执行下一步
-        const next = () => {
+        const next = () => {            
             if (index >= this.middlewares.length) {
                 done();
                 return;
-            }
+            }            
             const mw = this.middlewares[index++];
             mw(req, resBuilder, next);
         }
@@ -54,8 +54,8 @@ class Router {
 
         let response = null;
 
-        const resBuilder = (status, message, body, keepAlive) => {
-            response = this.buildResponse(status, message, body, keepAlive);
+        const resBuilder = (status, message, body, keepAlive) => {            
+            response = this.buildResponse(status, message, body, keepAlive);            
         };
 
         this.runMiddleware(req, resBuilder, () => {
