@@ -6,15 +6,30 @@ const Router = require('./Router');
 
 const router = new Router();
 
-router.use("/index.html",(req)=>{
+// 日志中间件 
+router.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+    next();
+});
+
+// // 错误处理中间件 
+// router.use((req, res, next) => {
+//     try {
+//         next();
+//     } catch (err) {
+//         console.error("Error:", err); res(500, 'Internal Server Error', '<h1>500 Internal Server Error</h1>', false);
+//     }
+// });
+
+router.route("/index.html", (req) => {
     return router.buildResponse(200, 'OK', '<h1>Hello World</h1>', req.headers['connection'] === 'keep-alive');
 })
 
-router.use("/test",(req)=>{
+router.route("/test", (req) => {
     return router.buildResponse(200, 'OK', '<h1>Test</h1>', req.headers['connection'] === 'keep-alive');
 })
 
-router.use("/stream", (req) => {
+router.route("/stream", (req) => {
     // 返回 chundked 响应
     let response = 'HTTP/1.1 200 OK\r\n' +
         'Content-Type: text/plain\r\n' +
@@ -45,7 +60,7 @@ const server = net.createServer((socket) => {
         const request = stateMachine.onData(chunk);
 
         if (request) {
-            const response = router.dispatch(request);            
+            const response = router.dispatch(request);
 
             socket.write(response);
             //判断链接是否关闭
