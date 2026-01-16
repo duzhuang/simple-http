@@ -12,14 +12,14 @@ router.use((req, res, next) => {
     next();
 });
 
-// // 错误处理中间件 
-// router.use((req, res, next) => {
-//     try {
-//         next();
-//     } catch (err) {
-//         console.error("Error:", err); res(500, 'Internal Server Error', '<h1>500 Internal Server Error</h1>', false);
-//     }
-// });
+// 错误处理中间件 
+router.use((req, res, next) => {
+    try {
+        next();
+    } catch (err) {
+        console.error("Error:", err); res(500, 'Internal Server Error', '<h1>500 Internal Server Error</h1>', false);
+    }
+});
 
 router.route("/index.html", (req) => {
     return router.buildResponse(200, 'OK', '<h1>Hello World</h1>', req.headers['connection'] === 'keep-alive');
